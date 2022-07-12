@@ -1,0 +1,192 @@
+---
+title: Análise do Painel dos Municípios Gaúchos
+output: html_notebook
+---
+ 
+ 
+### Setup
+ 
+```{r setup}
+suppressWarnings(suppressMessages({
+  library(knitr)
+  library(kableExtra)
+  library(htmltools)
+  library(tidyverse)
+  library(scales)
+  library(ExPanDaR)
+}))
+knitr::opts_chunk$set(fig.align = 'center')
+```
+ 
+ 
+### Create Sample
+ 
+This step reads the raw data provided by `ExPanD()` and generates the sample for the analysis.
+ 
+```{r create_sample}
+create_sample <- function(df, df_def) {
+  # Set infinite numerical variables to NA
+  df[, df_def$var_name[df_def$type == "numeric"]] <-
+    lapply(df[, df_def$var_name[df_def$type == "numeric"]],
+      function(x) ifelse(is.finite(x), x, NA))
+ 
+  # Delete numerical variables that only contain NAs
+  all_na_vars <- sapply(df, function (x) all(is.na(x)))
+  df_def <- df_def[!all_na_vars,]
+  df <- df[, df_def$var_name]
+ 
+  # Drop observations that are NA in variables that are not allowed to
+  df <- df[complete.cases(df[, df_def$var_name[which(df_def$can_be_na == FALSE)]]), ]
+ 
+  df <- droplevels(df)
+  return(list(df = df, df_def = df_def))
+}
+ 
+load("ExPanD_nb_data.Rdata")
+ 
+smp_list <- create_sample(nb_df, nb_df_def)
+smp <- smp_list$df
+smp_def <- smp_list$df_def
+```
+ 
+ 
+```{r}
+kable(smp_def$var_name[c(2, 4:7, 9:19)], row.names = FALSE) 
+```
+
+```{r}
+kable(smp_def$type[c(2, 4:7, 9:19)], row.names = FALSE) 
+```
+
+### Bar Chart
+ 
+```{r bar_chart}
+df <- smp
+df$Ano_Ref <- as.factor(df$Ano_Ref)
+df$Linha_Original <- as.factor(df$Linha_Original)
+p <- ggplot(df, aes(x = Ano_Ref)) +
+  geom_bar(aes(fill= Linha_Original), position = "stack") +
+  labs(x = "Ano_Ref", fill = "Linha_Original")
+p <- p + scale_x_discrete(breaks = pretty(as.numeric(as.character(df$Ano_Ref)), n = 10))
+p
+```
+ 
+ 
+### Missing Values
+ 
+```{r missing_values}
+df <- smp
+prepare_missing_values_graph(df, "Ano_Ref")
+```
+ 
+ 
+### Descriptive Statistics
+ 
+```{r descriptive_statistics}
+df <- smp
+t <- prepare_descriptive_table(smp)
+t$kable_ret  %>%
+  kable_styling("condensed", full_width = F, position = "center")
+```
+ 
+ 
+### Histogram
+ 
+```{r histogram}
+var <- as.numeric(smp$POP_TOT)
+hist(var, main="", xlab = "POP_TOT", col="red", right = FALSE, breaks= 20)
+```
+ 
+ 
+### Extreme Observations
+ 
+```{r extreme_obs}
+df <- smp
+vars <- c("Municipio", "Ano_Ref", "POP_TOT")
+df <- df[, vars]
+df <- droplevels(df[complete.cases(df), ])
+if (nrow(df) <= 10) {
+  cat("Not enough data to generate table")
+} else {
+  tab <- prepare_ext_obs_table(df, var = "POP_TOT")
+  tab$kable_ret %>%
+    kable_styling()
+}
+```
+ 
+ 
+### By Group Bar Graph
+ 
+```{r by_group_bar_graph}
+df <- smp
+prepare_by_group_bar_graph(df, "Linha_Original", "POP_TOT", mean, TRUE)$plot +
+  ylab("mean POP_TOT")
+```
+ 
+ 
+### By Group Violin Graph
+ 
+```{r by_group_violin_graph}
+df <- smp
+prepare_by_group_violin_graph(df, "Linha_Original", "POP_TOT", TRUE)
+```
+ 
+ 
+### Trend Graph
+ 
+```{r trend_graph}
+df <- smp
+prepare_trend_graph(df, "Ano_Ref", c("POP_TOT"))$plot
+```
+ 
+ 
+### Quantile Trend Graph
+ 
+```{r quantile_trend_graph}
+df <- smp
+prepare_quantile_trend_graph(df, "Ano_Ref", c(0.05, 0.25, 0.5, 0.75, 0.95), "POP_TOT")$plot
+```
+ 
+ 
+### By Group Trend Graph
+ 
+```{r by_group_trend_graph}
+df <- smp
+prepare_by_group_trend_graph(df, "Ano_Ref", "Linha_Original", "POP_TOT")$plot
+```
+ 
+ 
+### Correlation Graph
+ 
+```{r corrplot}
+df <- smp
+ret <- prepare_correlation_graph(df[, c(4, 5, 11, 12, 13, 14, 15, 16, 17, 18, 19)])
+```
+ 
+ 
+### Scatter Plot
+ 
+```{r scatter_plot}
+df <- smp
+df <- df[, c("Municipio", "Ano_Ref", "POP_TOT", "POP_URB", "Linha_Original", "AG001")]
+df <- df[complete.cases(df), ]
+prepare_scatter_plot(df, "POP_TOT", "POP_URB", color = "Linha_Original", size = "AG001", loess = 1)
+```
+ 
+ 
+### Regresssion Table
+ 
+```{r regression}
+df <- smp
+df <- df[, c("POP_URB", "POP_TOT")]
+df <- df[complete.cases(df), ]
+df <- droplevels(df)
+t <- prepare_regression_table(df, dvs = "POP_URB", idvs = c("POP_TOT"), models = "ols")
+HTML(t$table)
+```
+ 
+ 
+### Note
+ 
+This Notebook has been automatically generated using the [ExPanDaR](https://joachim-gassen.github.io/ExPanDaR) package.
+ 

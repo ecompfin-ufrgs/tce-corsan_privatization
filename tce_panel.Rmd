@@ -15,16 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(ExPanDaR)
 
-tce <- read.csv("https://raw.githubusercontent.com/ecompfin-ufrgs/tce-corsan_privatization/main/Base_com_Variaveis_Reduzidas.csv", encoding = "UTF-8")
+tce <- read_rds("https://raw.githubusercontent.com/ecompfin-ufrgs/tce-corsan_privatization/main/Base_com_Variaveis_Reduzidas.rds")
 ExPanD(tce, cs_id = "Municipio", ts_id = "Ano_Ref", title = "Análise do Painel dos Municípios Gaúchos", export_nb_option = TRUE)
-
-graph <- prepare_quantile_trend_graph(tce, ts_id = "Ano_Ref", quantiles = c(0.05, 0.25, 0.5, 0.75, 0.95), 
-                                      var = "FN001")
-graph$plot
-
-t<- prepare_correlation_table(tce, bold = 0.01, format="html")
-
-ret <- prepare_correlation_graph(tce)
 ```
 
 
