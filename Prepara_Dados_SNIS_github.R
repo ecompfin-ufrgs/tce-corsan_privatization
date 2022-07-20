@@ -302,6 +302,9 @@ if(limpa_snis == T) {
   ids <- c(ids,
            snis[Municipio == "Uruguaiana" & Ano_Ref == 2011 &
                 Prestador == "Companhia Rio-Grandense de Saneamento"]$ID)
+  ids <- c(ids,
+           snis[Municipio == "Tupandi" & Ano_Ref %in% c(2019, 2020) &
+                Prestador %like% "Associacao de Desenvolvimento Comunitario de Tupandi"]$ID)
   
   snis <- snis[!ID %in% ids]
 }
@@ -333,74 +336,4 @@ write.csv2(snis[Linha_Original==T & POP_TOT >= 100000],
 
 saveRDS(snis[Linha_Original==T], 
         file="Base_com_Variaveis_Reduzidas.rds")
-
-
-
-
-nomes <- names(rs)
-
-# Remove campos "A"
-campos_a <- names(rs)[substr(names(rs), 6, 6)!="A"]; campos_a
-campos_a <- campos_a[campos_a %like% "FN0" |
-                     campos_a %like% "Ano"]; campos_a
-campos_a <- campos_a[!campos_a %like% "GE0"]
-
-fin <- rs[, campos_a, with = F]
-dim(fin)
-
-names(fin) <- substr(names(fin), 1, 5)
-
-# campos_a <- substr(campos_a, start = 1, stop = 5)
-# campos_a[campos_a  %like% "Ano"] <- "Ano"
-
-# fin <- rs[, campos_a, with=FALSE]
-
-fin <- as.data.frame(merge(fin,
-                           indices,
-                           by.x = "Ano",
-                           by.y = "Ano_Ref",
-                           all.x = T, all.y = F))
-
-fin$FN010_igpm <- as.numeric(fin$FN010) * as.numeric(IGPM)
-
-fin[, FN010_igpm := as.numeric(as.character(FN010)) * as.numeric(as.character(IGPM))]
-fin[, FN010_ipca := as.numeric(as.character(FN010)) * as.numeric(as.character(IPCA))]
-fin[, FN010_incc := as.numeric(as.character(FN010)) * as.numeric(as.character(INCC))]
-fin[, FN010_incc := as.numeric(as.character(FN010)) * as.numeric(as.character())]
-# 
-# 
-# fin[, Ano2 := paste0("01","/", "12", "/", Ano)]
-# fin[, Ano3 := as.Date(Ano2, format = "%d/%m/%Y")]
-# 
-# fin2 <- merge(fin,
-#               indices,
-#               by.x = "Ano",
-#               by.y = "Ano_Ref",
-#               all = T)
-# 
-# fin <- lapply(fin[, nomes_fin], gsub(".", ""))
-
-
-
-
-
-teste <- fin[Ano==2000]
-set.seed(99)
-
-teste[, FN_Teste := rnorm(n = nrow(teste), mean = 1000, sd=100)]
-
-teste[, FN001_Defl := deflate(FN_Teste,
-                              nominal_dates = Ano3,
-                              real_date = "12/2020")]
-
-
-summary(fin)
-head(fin)
-ncol(fin)
-fin <- lapply(fin[2:ncol(fin)], as.numeric)
-
-summary(fin)
-
-
-
 
