@@ -1,0 +1,173 @@
+---
+title: "TCE-Corsan"
+output: html_document
+date: '2022-07-22'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Análise de Dados em Painel - Teoria
+
+```{r ExPanDaR}
+#install.packages("ExPanDaR")
+
+library(ExPanDaR)
+
+tce <- read.csv2("https://raw.githubusercontent.com/ecompfin-ufrgs/tce-corsan_privatization/main/Base_com_Variaveis_Reduzidas.csv")
+#tce <- readRDS("https://raw.githubusercontent.com/ecompfin-ufrgs/tce-corsan_privatization/main/Base_com_Variaveis_Reduzidas_Corsan_Agua.csv")
+tce$ID <- NULL
+tce$Linha_Original <- NULL
+tce$Cod_Municipio <- NULL
+tce$Cod_Prestador <- NULL
+tce$Deflator_PIB_Acum <- NULL
+
+tce <- subset(tce, tce$Ano_Ref > 1999)
+
+df_def <- data.frame(
+  var_name = names(tce),
+  var_def = c("Município",
+              "População Total",
+              "População urbana",
+              "Ano",
+              "Prestador",
+              "Tipo de Serviço",
+              "Natureza Jurídica",
+              "População total atendida com abastecimento de água",
+              "População total atendida com esgotamento sanitário",
+              "Receita operacional direta total",
+              "Receita operacional direta de água",
+              "Receita operacional direta de esgoto",
+              "Arrecadação total",
+              "Receita operacional direta de água exportada (bruta ou tratada)",
+              "Investimento realizado em abastecimento de água pelo prestador de serviços",
+              "Investimento realizado em esgotamento sanitário pelo prestador de serviços",
+              "Receita operacional direta - esgoto bruto importado"),
+  type = c("cs_id", rep("numeric", 2), "ts_id", rep("factor", 3)
+           , rep("numeric",10))
+)
+
+#ExPanD(df = tce, cs_id = "Municipio", ts_id = "Ano_Ref", title = "Análise do Painel dos Municípios Gaúchos", abstract = paste("This interactive display uses SNIS data to",
+#                        "let you explore the panel data for RS cities. Scroll down and #enjoy!"),export_nb_option = TRUE, components = c(regression = FALSE))
+
+# clist <- list(
+#   reg_y = "AG001",
+#   reg_x = "FN002",
+#   reg_fe1 = "Municipio",
+#   reg_fe2 = "Ano_Ref",
+#   cluster = "4" # Now this is hard to guess 
+#   # 1: none, 2: first FE, 3: second FE, 4: both FE
+# )
+ExPanD(df = tce, title = "Análise do Painel dos Municípios Gaúchos", abstract = paste("This interactive display uses SNIS data to","let you explore the panel data for RS cities. Scroll down and enjoy!"), components = c(by_group_violin_graph = FALSE), export_nb_option = TRUE, df_def = df_def)
+       #,config_list = clist)
+
+#components = c(descriptive_table = TRUE, 
+   #                   by_group_violin_graph = TRUE, 
+    #                  scatter_plot = TRUE, 
+     #                 regression = TRUE))
+#Valid names are: sample_selection, subset_factor, grouping, bar_chart, missing_values, udvars, descriptive_table, histogram, ext_obs, by_group_bar_graph, by_group_violin_graph, trend_graph, quantile_trend_graph, by_group_trend_graph, corrplot, scatter_plot, regression, html_block
+```
+
+
+A hipótese de trabalho é que, em virtude da complexidade da questão do saneamento básico (materializada por inúmeras responsabilidades concorrentes pelos entes da União) os resultados serão ambíguos em virtude da relevância de inúmeros outros fatores, ainda que os coeficientes apontem no sentido de aumento de oferta de serviços de saneamento com redução de custos nos mesmo moldes do ocorrido com a privatização do setor de telecomunicações levada a cabo pelo governo federal.
+
+Qual será a trajetória da cobertura de saneamento básico no Rio Grande do Sul à luz do Novo Marco Legal do Saneamento e da Privatização da CORSAN? Há impactos na mortalidade infantil e em doenças evitáveis?
+
+Trata-se de avaliar o impacto do novo marco legal e da privatização da corsan na quebra estrutural das séries de cobertura no saneamento, tendo em vista a receita tributária (proxy para pib municipal) e o gasto com saneamento dos municípios gaúchos.
+
+* População total atendida com abastecimento de água (AG001- SNIS), medida pelo total da população do RS com acesso à rede de água
+* População total atendida por rede de esgoto (ES001-SNIS).
+* produto interno bruto dos municípios do RS
+* efetividade agregada das gestões municipais, medidas pelo IEGM ponderado pela parcela da população em cada município.
+*total dos investimentos em saneamento básico, medido pelos investimentos municipais e estadual em saneamento com dados fornecidos pelo TCE-RS na conta de despesa código 123210506
+
+A receita tributária municipal (como proxy para o PIB municipal) e a despesa com saneamento dos municípios obtida do [Portal de Dados Abertos do TCE](http://dados.tce.rs.gov.br/). 
+
+A cobertura da rede de águas e esgotos provém do [Sistema Nacional de Informações sobre Saneamento](http://app4.mdr.gov.br/serieHistorica/#).
+
+ [Análise de Dados em Painel](https://www.kaggle.com/code/jogassen/explore-world-bank-panel-data-with-r/notebook). Veja também [aqui](https://www.r-bloggers.com/2019/12/explore-your-data-with-expand/) e [aqui](https://jgassen.shinyapps.io/expacc/).
+
+
+```{r cars}
+
+```
+
+## Análise Exploratória de Dados
+
+```{r pressure, echo=FALSE}
+```
+
+Painel de município-ano 
+
+Os dados utilizados na análise foram extraídos do Sistema Nacional de Informações sobre Saneamento (SNIS) e do IBGE. As variáveis utilizadas são as seguintes:
+
+Município
+Ano de Referência
+Prestador
+Tipo de serviço
+Natureza jurídica
+POP TOT - População total do município do ano de referência (Fonte: IBGE):
+POP URB - População urbana do município do ano de referência (Fonte: IBGE):
+AG001 - População total atendida com abastecimento de água
+ES001 - População total atendida com esgotamento sanitário
+FN001 - Receita operacional direta total deflacionada pelo índice de reajuste da ANA
+FN002 - Receita operacional direta de água deflacionada pelo índice de reajuste da ANA
+FN003 - Receita operacional direta de esgoto deflacionada pelo índice de reajuste da ANA
+FN006 - Arrecadação total
+FN023 - Investimento realizado em abastecimento de água pelo prestador de serviços deflacionada pelo INCC
+FN024 - Investimento realizado em esgotamento sanitário pelo prestador de serviços deflacionada pelo INCC
+
+O banco de dados utilizado contém 10 variáveis numéricas e 4 fatores.
+
+uma variável ou um vetor de variáveis dentro deste conjunto de dados que identifica a dimensão transversal e uma variável que é coercível a um fator ordenado e que identifica (e classifica) a dimensão de tempo do seu painel.
+
+município-ano. Ele é organizado em um formato longo usando município como identificador de seção transversal e ano como identificador de série temporal. Cada uma das variáveis adicionais é então armazenada em uma coluna separada. Possui fator () e  variáveis numéricas (). 
+
+Como pode ser visto pelo gráfico de barras, o conjunto de dados fornece um painel desbalanceado de xxx municípios. O gráfico de valores ausentes mostra dados ausentes em todas as variáveis. Ao rolar para baixo, você verá que o conjunto de dados contém x variáveis numéricas. Ohando o histograma e a tabela de observações extremas aprendemos mais sobre eles. O gráfico de tendência de tempo e a tendência de quantil de tempo comunicam x notícias: a x está aumentando ao longo do tempo em todos os municípios. Você pode verificar que o mesmo vale para os municípios e para seu x. Você também notará que, para os x últimos, a distribuição entre municípios aumenta com o tempo.
+
+Observando o gráfico de dispersão, você percebe que existem algumas observações com x extremamente alto que acionam a linha mais suave do LOESS para obter uma inclinação negativa. Se você passar o mouse sobre os pontos, verá que são observações de x. Até que ponto nossos resultados da regressão são afetados por essas observações extremas? Para descobrir isso, winsorizar seus dados no nível de 1\%. Depois de fazer isso, a figura de cima agora se parece com isso.
+
+A associação tornou-se mais robusta em todas as regiões e o gráfico de dispersão agora mostra uma associação positiva em toda a gama de PIB per capita winsorized.
+
+Para inferir se nossa associação “sobrevive” a um controle para variância induzida pelo tempo na variável que é estável entre os municípios, estimamos um modelo de regressão que inclui efeitos fixos de município e ano.
+
+Embora isso possa ser impulsionado pelo poder relativamente baixo do teste 
+
+A cargo do Fernando
+
+Nesta seção, iremos executar várias análises estatísticas e de visualização do conjunto de dados. As análises podem ser feitas para cada ano.
+
+Como primeiro passo, nós podemos observar a frequência com que as observações estão ausentes no conjunto de dados de acordo com o ano para cada variável.
+
+O gráfico a seguir mostra a razão de valores ausentes para todos os anos. Muitas variáveis de controle interessantes não estão disponíveis para todos os anos para cada município. Em especial, os investimentos realizado em água (FN023) e esgoto (FN024) de 2011 em diante. Uma tabela descritiva encontra-se a seguir.
+
+
+
+x é fortemente enviesado para a direita, o que significa que muitos municípios têm , enquanto poucos município têm altos níveis. Ao olhar para a tabela com as observações extremas, nós podemos identificar estes municípios.
+A x é distribuída de forma desigual entre os municípios. Isso também vale para y.
+
+O gráfico de tendência de tempo e a tendência de quantil de tempo comunicam algumas notícias: a x está aumentando ao longo do tempo em todo o mundo. Você pode verificar que o mesmo vale para y e z. 
+
+x cresce com o tempo e sua distribuição se amplia. y também cresce mas a sua distribuição não se alarga ao longo do tempo. A variável x está aumentando/diminuindo fortemente ao longo do tempo. Mas verificar se isto vale para todos os municípios...um gráfico com a tendência ao longo do tempo para os quantis.
+
+Uma tabela com as correlações lineares (de Pearson) e as correlações de Spearman (abaixo da diagonal) encontra-se a seguir. O número de observações varia de 248 a 6951. As correlações significativas ao nível de 1\% aparecem em negrito. Para visualizar melhor as correlações utilizamos também uma exibição gráfica da matriz de correlação. Podemos notar que há uma correlação forte e positiva entre as variáveis que levam em consideração as populações totais atendidas com água e esgoto sanitário e suas receitas operacionais e investimentos realizados. Passando o mouse sobre a elipse encontramos o valor da correlação linear, o p-valor associado e o tamanho da amostra. As elipses em azul acima (abaixo) da diagonal mostram a correlação positiva de Pearson (Spearman) entre as variáveis. Se estivermos interessados nos valores de correlação exatos é só passar o mouse em cima da elipse.
+
+O gráfico de dispersão e a seção de análise de regressão permitem explorar as associações com mais de detalhes. Abaixo há uma captura de tela com um gráfico de dispersão e a estimação de um modelo de mínimos quadrados ordinários por município com efeitos fixos de x e erros padrão agrupados por x para verificar se a associação não é apenas impulsionada pela heterogeneidade não observável de x constante no tempo.
+
+Gráficos de dispersão permitem checar se a associação é linear. Passando o mouse pelos círculos nós encontramos o ano e o município. Círculos maiores indicam maiores valores (proporcionais) da variável utilizada.
+
+Por último, vamos explorar como essas observações interagem com os modelos padrão de regressão, adicionando diferentes variáveis independentes nos modelos.
+
+
+Os resultados da regressão abaixo do gráfico de dispersão documentam a associação positiva entre x e y. Mas, quando você olha para o gráfico de dispersão com cuidado e passa o mouse sobre ele para identificar as observações, provavelmente notará que os municípios parecem ter seus padrões de desenvolvimento únicos. Isso exige a inclusão de efeitos fixos em nível de município na regressão.
+
+Resultados de regressão com efeitos fixos de município
+
+A associação de y com x ainda existe. Mas continuará a valer quando permitirmos que x siga uma tendência temporal? Como os avanços [] afetam vários municípios mais ou menos simultaneamente, nós testamos a inclusão de efeitos fixos por ano também.
+
+Resultados de regressão com efeitos fixos de município e ano
+
+Agora a associação entre y e x é... Isso indica que uma [] mais alta está associada a uma menor [] depois de permitir um tempo não observado e a heterogeneidade dos municípios. 
+
+Se permitirmos a possibilidade de que x mude ao longo do tempo por causa de [] (como, por exemplo, []) e que os municípios tenham origens diferentes (por exemplo, por causa de sua localização geográfica), não podemos observar uma associação robusta de y com x.
