@@ -1,1 +1,1 @@
-# Análise Preditiva da Privatização da CORSAN: daos em painel e aprendizado de máquina
+# Análise Preditiva da Privatização da CORSAN com dados em painel
