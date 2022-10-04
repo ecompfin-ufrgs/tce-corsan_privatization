@@ -24,9 +24,11 @@ path_output    <- paste0(path_wd, "Output/")
 setwd(path_input)
 getwd()
 
-##### Parâmetros para Função #####
+##### Parâmetros para Função (quando for colocado em forma decente) #####
 produto_cartesiano <- F
-limpa_snis <- T
+limpa_snis         <- F
+limpa_emergencial  <- T 
+tipo_servico       <- "Agua"
 
 
 ##### Funções #####
@@ -206,9 +208,7 @@ rs[, Ano_Ref := as.integer(Ano.de.Referência)]
 
 # Produto cartesiano
 
-  
-
-  municipios <- sort(unique(rs$Cod_Municipio))
+    municipios <- sort(unique(rs$Cod_Municipio))
   anos       <- sort(unique(rs$Ano.de.Referência))
 
 if(produto_cartesiano==T) {  
@@ -242,6 +242,38 @@ contagem <- rs[, .(ID, Linha_Original, Municipio, Cod_Municipio,
                    AG001, ES001, FN001, FN002, FN003, FN006, FN007,
                    FN023, FN024, FN038, 
                    Deflator_PIB_Acum)]
+
+resumo_rs1 <-
+  rs[Ano_Ref >= 2000 
+           & Tipo_Serv %in% c("Agua", "Agua e Esgoto"), 
+           .(POP_TOT = mean(POP_TOT, na.rm = T),
+             AG001 = sum(AG001, na.rm = T),
+             QTD = .N),
+           by = c("Ano_Ref", "Municipio")][order(Ano_Ref, Municipio)]
+
+resumo_rs2 <-
+  resumo_rs1[Ano_Ref >= 2000, 
+           .(POP_TOT = sum(POP_TOT, na.rm = T),
+             POP_ATENDIDA = sum(AG001, na.rm = T),
+             QTD = .N),
+           by = c("Ano_Ref")][order(Ano_Ref)]
+
+
+resumo1 <-
+  contagem[Prestador == "Companhia Rio-Grandense de Saneamento"
+           & Ano_Ref >= 2000, 
+           .(POP_TOT = sum(POP_TOT, na.rm = T),
+             POP_ATENDIDA = sum(AG001, na.rm = T),
+             QTD = .N),
+           by = "Ano_Ref"][order(Ano_Ref)]
+
+resumo2 <-
+  contagem[Prestador %like% "Prefeitura Municipal de "
+           & Ano_Ref >= 2000, 
+           .(POP_TOT = sum(POP_TOT, na.rm = T),
+             POP_ATENDIDA = sum(AG001, na.rm = T),
+             QTD = .N),
+           by = "Ano_Ref"][order(Ano_Ref)]
 
 
 # Contagem de NAs
@@ -287,30 +319,165 @@ if(limpa_snis == T) {
   
   ids <- snis[Municipio == "Campo Novo" & 
               Prestador != "Prefeitura Municipal de Campo Novo"]$ID
+  
+  ids <- c(ids,
+           snis[Municipio == "Acegua" & Ano_Ref %in% c(2016, 2018, 2019) &
+                Prestador == "Prefeitura Municipal de Acegua"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Agua Santa" & Ano_Ref == 2010 &
+                Prestador == "Prefeitura Municipal de Agua Santa"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Arroio dos Ratos" & Ano_Ref %in% c(2009, 2011)  &
+                Prestador == "Prefeitura Municipal de Arrio dos Ratos"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Barao" & Ano_Ref %in% c(2016, 2019, 2020)  &
+                Prestador == "Prefeitura Municipal de Barao"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Bom Jesus" & Ano_Ref %in% c(2013:2017)  &
+                Prestador == "Prefeitura Municipal de Bom Jesus"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Camaqua" & Ano_Ref %in% c(2013)  &
+                Prestador == "Prefeitura Municipal de Camaqua"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Cambara do Sul" & Ano_Ref %in% c(2011:2012)  &
+                Prestador == "Prefeitura Municipal de Campestre da Serra"]$ID)
+
+  ids <- c(ids,
+           snis[Municipio == "Campinas das Missoes" & Ano_Ref %in% c(2010:2016, 2018:2020)  &
+                Prestador == "Prefeitura Municipal de Campinas das Missoes"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Candelaria" & Ano_Ref %in% c(2012)  &
+                Prestador == "Prefeitura Municipal de Candelaria"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Cangucu" & Ano_Ref %in% c(2009:2020)  &
+                Prestador == "Prefeitura Municipal de Cangucu"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Capela de Santana" & Ano_Ref %in% c(2010)  &
+                Prestador == "Prefeitura Municipal de Capela de Santana"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Carlos Barbosa" & Ano_Ref %in% c(2011:2020)  &
+                Prestador == "Prefeitura Municipal de Carlos Barbosa"]$ID)
+    
+  ids <- c(ids,
+           snis[Municipio == "Campestre da Serra" & Ano_Ref %in% c(2014:2020)  &
+                Prestador == "Prefeitura Municipal de Bom Jesus"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Catuipe" & Ano_Ref %in% c(2011:2020)  &
+                Prestador == "Prefeitura Municipal de Catuipe"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Cerrito" & Ano_Ref %in% c(2018)  &
+                Prestador == "Prefeitura Municipal de Cerrito"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Cerro Grande do Sul" & Ano_Ref %in% c(2011)  &
+                Prestador == "Prefeitura Municipal de Cerro Grande do Sul"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Cotipora" & Ano_Ref %in% c(2010)  &
+                Prestador == "Prefeitura Municipal de Cotipora"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Dileramando de Aguiar" & Ano_Ref %in% c(2013:2016)  &
+                Prestador == "Prefeitura Municipal de Dileramando de Aguiar"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Dois Irmaos" & Ano_Ref %in% c(2013:2019)  &
+                Prestador == "Prefeitura Municipal de Dois Irmaos"]$ID)
+  
+  ids <- c(ids,
+           snis[Municipio == "Dom Feliciano" & Ano_Ref %in% c(2018)  &
+                Prestador == "Prefeitura Municipal de Dom Feliciano"]$ID)
+  
   ids <- c(ids, 
            snis[Municipio == "Itapuca"& Ano_Ref %in% c(2014:2017) &
              Prestador != "Prefeitura Municipal de Itapuca"]$ID)
+  
+  
+  ids <- c(ids, 
+           snis[Municipio == "Herval"& Ano_Ref %in% c(2015:2020) &
+                  Prestador != "Prefeitura Municipal de Herval"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Estrela"& Ano_Ref %in% c(2010:2013, 2016:2020) &
+                Prestador != "Prefeitura Municipal de Estrela"]$ID)
+
+  ids <- c(ids, 
+           snis[Municipio == "Fagundes Varela"& Ano_Ref %in% c(2012, 2013) &
+                  Prestador != "Prefeitura Municipal de Fagundes Varela"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Faxinal do Soturno"& Ano_Ref %in% c(2015:2017) &
+                  Prestador != "Prefeitura Municipal de Faxinal do Soturno"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Flores da Cunha"& Ano_Ref %in% c(2012) &
+                  Prestador != "Prefeitura Municipal de Flores da Cunha"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Frederico Westfalen"& Ano_Ref %in% c(2010, 2012, 2019, 2020) &
+                  Prestador != "Prefeitura Municipal de Frederico Westfalen"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Garibaldi"& Ano_Ref %in% c(2011:2020) &
+                  Prestador != "Prefeitura Municipal de Garibaldi"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Guapore"& Ano_Ref %in% c(2009, 2016:2020) &
+                  Prestador != "Prefeitura Municipal de Guapore"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Horizontina"& Ano_Ref %in% c(2009, 2016, 2017, 2020) &
+                  Prestador != "Prefeitura Municipal de Horizontina"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Ijui"& Ano_Ref %in% c(2014) &
+                  Prestador != "Prefeitura Municipal de Ijui"]$ID)
+  
+  ids <- c(ids, 
+           snis[Municipio == "Ipe"& Ano_Ref %in% c(2013, 2014, 2016, 2017) &
+                  Prestador != "Prefeitura Municipal de Ipe"]$ID)
+  
   ids <- c(ids,
            snis[Municipio == "Sao Francisco de Paula" & Ano_Ref == 2011 &
                 Prestador != "Sanea Projetos e Construcoes Ltda"]$ID)
+  
   ids <- c(ids,
            snis[Municipio == "Seberi" & Ano_Ref %in% c(2011:2020) &
                 Prestador != "Prefeitura Municipal de Seberi"]$ID)
+  
   ids <- c(ids,
            snis[Municipio == "Teutonia" & Ano_Ref %in% c(2011, 2012, 2017:2020) &
                 Prestador != "Prefeitura Municipal de Teutotnia"]$ID)
+  
   ids <- c(ids,
            snis[Municipio == "Uruguaiana" & Ano_Ref == 2011 &
                 Prestador == "Companhia Rio-Grandense de Saneamento"]$ID)
+  
   ids <- c(ids,
            snis[Municipio == "Tupandi" & Ano_Ref %in% c(2019, 2020) &
                 Prestador %like% "Associacao de Desenvolvimento Comunitario de Tupandi"]$ID)
   
   snis <- snis[!ID %in% ids]
+  
 }
 
-duplos <- snis[duplicated(snis, by = c("Municipio", "Ano_Ref", "Prestador", "Tipo_Serv")),]
-
+# if(tipo_sevico == "Agua") {
+#   
+#   snis <- snis[Tipo_Serv == "Agua"]
+#   
+# }
 
 
 write.csv2(snis[Linha_Original==T & POP_TOT >= 100000,
